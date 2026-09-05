@@ -1,0 +1,55 @@
+# ==============================
+# Python
+# ==============================
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+.env
+
+# ==============================
+# Jupyter
+# ==============================
+.ipynb_checkpoints/
+
+# ==============================
+# Model artifacts
+# ==============================
+*.model
+*.joblib
+*.npy
+*.npz
+
+# ==============================
+# Large datasets
+# ==============================
+*.csv
+
+# ==============================
+# Archives
+# ==============================
+*.zip
+
+# ==============================
+# Generated ML artifacts
+# ==============================
+backend/artifacts/
+acme-recsys/backend/artifacts/
+!acme-recsys/backend/artifacts/.gitkeep
+
+# ==============================
+# Node / Frontend
+# ==============================
+node_modules/
+frontend/dist/
+acme-recsys/frontend/node_modules/
+acme-recsys/frontend/dist/
+
+# ==============================
+# OS / Editors
+# ==============================
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
