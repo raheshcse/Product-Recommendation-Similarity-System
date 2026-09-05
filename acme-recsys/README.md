@@ -1,275 +1,657 @@
-# Acme Retail — Product Recommendation Similarity System
+# Product Recommendation Similarity System
 
-A meaning-based product similarity service for a 51,542-product retail catalogue.
-Give it a catalogue product **or** any free product text and it returns the top-N
-most similar products, ranked by cosine similarity, from four interchangeable
-representations.
+An NLP-based product recommendation and similarity system designed to identify products that are semantically similar based on their **product name, main category, and subcategory**.
 
-| Representation | What it is | Unseen words |
-|---|---|---|
-| **TF-IDF** | Sparse lexical baseline, 1–2 grams, `min_df=2` | ✗ dropped |
-| **Word2Vec** | Skip-gram, 100-d, mean-pooled per product | ✗ dropped |
-| **FastText** | Skip-gram + character n-grams (3–6), 100-d | ✓ rebuilt from sub-words |
-| **Hybrid** | Min-max-normalised weighted blend (0.4 / 0.2 / 0.4) | ✓ |
-
-**Stack:** FastAPI (Python) · React + Vite + Tailwind · scikit-learn · gensim · NumPy/SciPy
+The project explores and compares three text representation techniques — **TF-IDF, Word2Vec, and FastText** — and uses **cosine similarity** to measure similarity between products and generate ranked Top-N recommendations.
 
 ---
 
-## 1. Quick start
+## 📌 Project Overview
 
-### 1.1 Backend
+Traditional product search systems often rely heavily on exact keyword matching. This can make it difficult to identify products that are related in meaning but do not share exactly the same words.
+
+This project addresses that problem by transforming product text into numerical vector representations and measuring similarity between products in vector space.
+
+The system supports:
+
+- Product-to-product similarity
+- Semantic product retrieval
+- Top-N similar product recommendations
+- Comparison of different text representation techniques
+- Handling of product vocabulary variations
+- Sparse and dense vector representations
+- Cosine similarity-based ranking
+- REST API access
+- Web-based frontend interaction
+
+---
+
+## 🎯 Objective
+
+The primary objective is to build a product similarity system that can:
+
+> Given a product or product description, identify and rank the most similar products based on their textual representation.
+
+The system focuses on understanding relationships between products rather than relying solely on exact keyword overlap.
+
+---
+
+# ⚡ Quick Start
+
+## 1. Backend
+
+Navigate to the backend directory:
 
 ```bash
 cd backend
-python -m venv .venv
-.venv\Scripts\activate          # Windows
-# source .venv/bin/activate     # macOS / Linux
+```
 
+Create a Python virtual environment:
+
+```bash
+python -m venv .venv
+```
+
+Activate the environment.
+
+### Windows
+
+```bash
+.venv\Scripts\activate
+```
+
+### macOS / Linux
+
+```bash
+source .venv/bin/activate
+```
+
+Install the required Python dependencies:
+
+```bash
 pip install -r requirements.txt
 ```
 
-Put `AcmeRetail_Products_Prepared.csv` in `backend/data/` (already included), then
-build the model artifacts once:
+The prepared dataset should be available at:
+
+```text
+backend/data/AcmeRetail_Products_Prepared.csv
+```
+
+Build the model artefacts:
 
 ```bash
 python scripts/build_artifacts.py
 ```
 
-That trains TF-IDF, Word2Vec and FastText and writes everything into
-`backend/artifacts/` (~2 minutes, ~150 MB). Use `--limit 5000` for a fast smoke test.
+This step trains and generates the three text representations:
 
-Start the API:
+```text
+TF-IDF
+Word2Vec
+FastText
+```
+
+The generated model artefacts are stored in:
+
+```text
+backend/artifacts/
+```
+
+The full build takes approximately **2 minutes** and produces approximately **150 MB** of artefacts.
+
+For a faster smoke test, use:
+
+```bash
+python scripts/build_artifacts.py --limit 5000
+```
+
+Start the FastAPI backend:
 
 ```bash
 uvicorn app.main:app --reload --port 8000
 ```
 
-* API docs — <http://127.0.0.1:8000/docs>
-* Health — <http://127.0.0.1:8000/api/health>
+### Backend endpoints
 
-### 1.2 Frontend
+**API documentation**
+
+http://127.0.0.1:8000/docs
+
+**Health check**
+
+http://127.0.0.1:8000/api/health
+
+---
+
+## 2. Frontend
+
+Open a new terminal and navigate to the frontend:
 
 ```bash
 cd frontend
+```
+
+Install the Node.js dependencies:
+
+```bash
 npm install
-npm run dev          # http://localhost:5173
 ```
 
-The dev server proxies `/api` to `http://127.0.0.1:8000`, so there is no CORS setup.
-
-`run_dev.bat` (Windows) / `run_dev.sh` starts both at once.
-
-### 1.3 Single-process deployment
+Start the development server:
 
 ```bash
-cd frontend && npm run build
-cd ../backend && uvicorn app.main:app --port 8000
+npm run dev
 ```
 
-If `frontend/dist` exists, FastAPI serves the built UI at `/` — one process, one port.
+The frontend will be available at:
+
+```text
+http://localhost:5173
+```
 
 ---
 
-## 2. How the system works
+## 🔄 Running the Complete Application
 
+Once both services are running:
+
+```text
+                 PRODUCT RECOMMENDATION SYSTEM
+                              │
+                ┌─────────────┴─────────────┐
+                │                           │
+                ▼                           ▼
+          React Frontend              FastAPI Backend
+          localhost:5173              localhost:8000
+                │                           │
+                └─────────────┬─────────────┘
+                              │
+                              ▼
+                    Recommendation Engine
+                              │
+                ┌─────────────┼─────────────┐
+                │             │             │
+                ▼             ▼             ▼
+              TF-IDF       Word2Vec      FastText
+                │             │             │
+                └─────────────┼─────────────┘
+                              ▼
+                     Cosine Similarity
+                              │
+                              ▼
+                       Ranked Top-N
+                              │
+                              ▼
+                     Similar Products
 ```
-raw product text
-      │
-      ▼  clean_text()               lowercase → strip punctuation → collapse whitespace
-normalised text
-      │
-      ▼  build_combined_text()      Name + Main Category + Subcategory → one document
-combined document
-      │
-      ▼  tokenise                   whitespace split
-   tokens
-      │
-      ├──► TF-IDF vectorizer  ──► sparse vector (82,879 features)
-      ├──► Word2Vec           ──► mean of known word vectors (100-d)
-      └──► FastText           ──► mean of word vectors incl. sub-word (100-d)
-      │
-      ▼  cosine similarity against every catalogue vector
-      ▼  drop the query itself, apply filters, argpartition top-N
-   ranked recommendations
-```
-
-The **same** `clean_text` / `build_combined_text` functions run at training time and
-at query time — that is what guarantees a live query is represented exactly the way
-the catalogue was.
-
-### Why cosine similarity
-
-Product documents differ wildly in length (0–39 tokens here). Cosine compares the
-*direction* of two vectors and ignores magnitude, so a three-word title and a
-thirty-word description are judged on what they say, not how much they say.
-All matrices are L2-normalised once at load, which turns cosine into a single dot
-product — the reason a query over 51k products returns in **2–10 ms**.
-
-### Why three representations
-
-TF-IDF is the honest baseline: precise where wording matches, blind where it does
-not. Word2Vec learns meaning from co-occurrence but drops any word missing from its
-vocabulary. FastText adds character n-grams, so novel wording, typos and unseen
-brand or model tokens still receive a sensible vector — which is what the
-generalisation requirement asks for.
-
-The difference is visible rather than asserted. Query
-`"wireless noisecancelling earbudz"` (two words that appear nowhere in training):
-
-* **TF-IDF** matches only `wireless` and returns *running shoes* (top score 0.32).
-* **Word2Vec** skips both unknown words entirely.
-* **FastText** rebuilds them from sub-words and returns true wireless earbuds with
-  noise cancellation (top score 0.94).
-
-Open the **How it works** tab and trace that query to see it stage by stage.
 
 ---
 
-## 3. API
+# 🧠 System Architecture
 
-| Method | Endpoint | Purpose |
-|---|---|---|
-| GET | `/api/health` | Readiness, catalogue size, which models loaded |
-| GET | `/api/models` | Per-representation metadata, dimensions, vocabulary, sparsity |
-| GET | `/api/catalogue/search?q=` | Type-ahead product search |
-| GET | `/api/catalogue/sample?n=` | Random products |
-| GET | `/api/catalogue/product/{id}` | One product |
-| GET | `/api/catalogue/stats` | Catalogue summary statistics |
-| GET | `/api/catalogue/categories` | Main categories with counts |
-| POST | `/api/recommend` | **Top-N similar products** |
-| POST | `/api/explain` | Stage-by-stage pipeline trace for a query |
-| GET | `/api/neighbours?word=` | Nearest words in each embedding space |
-| GET | `/api/evaluation` | Offline quality metrics per representation |
+The system follows an end-to-end NLP and recommendation pipeline:
 
-### Example
-
-```bash
-curl -X POST http://127.0.0.1:8000/api/recommend \
-  -H "Content-Type: application/json" \
-  -d '{"query_text":"wireless noisecancelling earbudz",
-       "models":["tfidf","word2vec","fasttext","hybrid"],
-       "top_n":10}'
+```text
+Product Catalogue
+       │
+       ▼
+Data Preparation
+       │
+       ▼
+Text Cleaning & Normalisation
+       │
+       ▼
+Product Text Construction
+       │
+       ├───────────────┬───────────────┐
+       ▼               ▼               ▼
+    TF-IDF          Word2Vec        FastText
+       │               │               │
+       └───────────────┼───────────────┘
+                       ▼
+                Product Vectors
+                       │
+                       ▼
+              Cosine Similarity
+                       │
+                       ▼
+                 Ranking Engine
+                       │
+                       ▼
+                Top-N Products
+                       │
+                       ▼
+                   REST API
+                       │
+                       ▼
+                 React Frontend
 ```
-
-```jsonc
-{
-  "query": { "mode": "free_text", "processed_text": "wireless noisecancelling earbudz", ... },
-  "results": [
-    {
-      "model": "fasttext",
-      "model_name": "FastText",
-      "elapsed_ms": 2.56,
-      "recommendations": [
-        { "rank": 1, "product_id": 30412,
-          "name": "luisport open ear bluetooth headphones wireless earphones ...",
-          "main_category": "tv audio cameras", "subcategory": "headphones",
-          "similarity_score": 0.9445 }
-      ],
-      "score_summary": { "max": 0.9445, "mean": 0.5145, "min": -0.21, "std": 0.0928 }
-    }
-  ],
-  "agreement": { "overlap_pct": 30.0, "pairwise": [ ... ] }
-}
-```
-
-`product_id` may be sent instead of `query_text` to use a catalogue item as the query.
 
 ---
 
-## 4. Evaluation
+# 📊 Dataset
 
-The catalogue carries no human relevance labels, so the product taxonomy stands in
-for one: a good neighbour of a query should usually share its subcategory.
+The project uses a catalogue containing approximately **70,000 products**.
 
-Measured over 200 random query products, k = 10:
+The original dataset contains multiple product attributes. For the similarity system, the following three text attributes are used:
 
-| Representation | Precision@10 | Category match@10 | MRR |
-|---|---|---|---|
-| **FastText** | **0.841** | **0.961** | 0.914 |
-| Word2Vec | 0.836 | 0.956 | **0.936** |
-| Hybrid | 0.820 | 0.948 | 0.872 |
-| TF-IDF | 0.790 | 0.927 | 0.862 |
+| Field | Description |
+|---|---|
+| `Name` | Product name |
+| `Main Category` | Main product category |
+| `Subcategory` | More specific product classification |
 
-These are proxies, not ground truth — they reward taxonomically consistent
-recommendations and should be read alongside the qualitative side-by-side view.
-The **Evaluation** tab re-runs them live at any sample size and k.
+These fields are combined to create the textual representation used by the NLP models.
+
+Example:
+
+```text
+Name:
+Wireless Bluetooth Headphones
+
+Main Category:
+Electronics
+
+Subcategory:
+Headphones
+```
+
+Combined representation:
+
+```text
+wireless bluetooth headphones electronics headphones
+```
 
 ---
 
-## 5. Project structure
+# 🧹 Data Preparation
 
+Before generating vector representations, the product data is cleaned and normalised.
+
+The preprocessing pipeline includes:
+
+1. Selecting relevant product attributes
+2. Handling missing values
+3. Converting text fields to strings
+4. Converting text to lowercase
+5. Removing special characters
+6. Removing unnecessary whitespace
+7. Removing duplicate records
+8. Combining product attributes into a single text representation
+9. Tokenising product text where required
+
+The prepared dataset contains:
+
+```text
+Name
+Main Category
+Subcategory
 ```
-acme-recsys/
+
+---
+
+# 🔢 Text Representation
+
+Three different approaches are implemented and compared.
+
+## 1. TF-IDF
+
+TF-IDF is used as a traditional lexical baseline.
+
+It represents each product using the importance of its terms within the catalogue.
+
+The implementation uses:
+
+- `TfidfVectorizer`
+- Unigrams and bigrams
+- English stop-word removal
+- Minimum document frequency filtering
+
+TF-IDF produces a **sparse vector representation**.
+
+### Advantages
+
+- Simple and interpretable
+- Efficient for lexical matching
+- Strong information-retrieval baseline
+
+### Limitations
+
+TF-IDF primarily measures term importance and does not inherently capture semantic relationships between different words.
+
+---
+
+# 🧠 2. Word2Vec
+
+Word2Vec is used to learn dense word representations from the context in which words occur throughout the product catalogue.
+
+The implementation uses the Skip-Gram architecture.
+
+Configuration includes:
+
+```text
+Vector size: 100
+Window size: 5
+Minimum word frequency: 2
+Skip-Gram: Enabled
+Epochs: 10
+```
+
+Word-level embeddings are aggregated to create a fixed-size **product-level vector**.
+
+Pipeline:
+
+```text
+Product Text
+     │
+     ▼
+Tokenisation
+     │
+     ▼
+Word2Vec Embeddings
+     │
+     ▼
+Vector Aggregation
+     │
+     ▼
+Product Vector
+```
+
+---
+
+# 🔤 3. FastText
+
+FastText extends the traditional word embedding approach by incorporating **character-level subword information**.
+
+This is particularly useful for product catalogues containing:
+
+- Spelling variations
+- Compound words
+- Technical terminology
+- Rare words
+- Vocabulary variations
+- Previously unseen words
+
+Configuration includes:
+
+```text
+Vector size: 100
+Window size: 5
+Minimum word frequency: 2
+Skip-Gram: Enabled
+Character n-grams: 3–6
+Epochs: 10
+```
+
+Product-level vectors are created by aggregating the FastText vectors of the words within each product.
+
+---
+
+# 📐 Cosine Similarity
+
+After converting products into vector representations, **cosine similarity** is used to measure similarity between products.
+
+The recommendation process is:
+
+1. Select a query product
+2. Obtain its vector representation
+3. Compare it with the vectors of catalogue products
+4. Calculate cosine similarity scores
+5. Exclude the query product itself
+6. Sort products by similarity
+7. Return the Top-N most similar products
+
+Example:
+
+```text
+Rank    Product                         Score
+--------------------------------------------------
+1       Bluetooth Wireless Headphones     0.91
+2       Wireless Gaming Headset            0.87
+3       Bluetooth Headset                  0.84
+4       Noise Cancelling Headphones        0.81
+5       Audio Headphones                   0.78
+```
+
+---
+
+# 🧪 Model Testing & Evaluation
+
+The similarity pipeline evaluates all three representations:
+
+```text
+TF-IDF
+   │
+   ▼
+Cosine Similarity
+   │
+   ▼
+Ranked Products
+```
+
+```text
+Word2Vec
+   │
+   ▼
+Cosine Similarity
+   │
+   ▼
+Ranked Products
+```
+
+```text
+FastText
+   │
+   ▼
+Cosine Similarity
+   │
+   ▼
+Ranked Products
+```
+
+The models are compared based on the relevance and quality of their Top-N product rankings.
+
+Evaluation considerations include:
+
+- Similarity score distribution
+- Top-N ranking quality
+- Semantic relevance
+- Product-category consistency
+- Vocabulary variation
+- Behaviour across different product types
+- Comparison between lexical and dense representations
+
+---
+
+# 🏗️ Project Structure
+
+```text
+Product-Recommendation-Similarity-System/
+│
 ├── backend/
+│   │
 │   ├── app/
-│   │   ├── main.py                     app factory, lifespan, static SPA mount
-│   │   ├── core/
-│   │   │   ├── config.py               all settings & hyper-parameters
-│   │   │   └── logging.py
-│   │   ├── schemas/recommendation.py   pydantic request/response models
-│   │   ├── services/
-│   │   │   ├── text_processing.py      the single source of text cleaning
-│   │   │   ├── catalogue.py            in-memory catalogue, search, stats
-│   │   │   ├── recommender.py          scoring, ranking, hybrid blend, agreement
-│   │   │   ├── evaluation.py           precision@k / category match / MRR
-│   │   │   └── representations/
-│   │   │       ├── base.py             the interface every model implements
-│   │   │       ├── tfidf.py
-│   │   │       └── dense.py            Word2Vec + FastText
-│   │   └── api/
-│   │       ├── deps.py
-│   │       └── routes/                 health · catalogue · recommend
-│   ├── scripts/build_artifacts.py      rebuilds every artifact from the CSV
-│   ├── data/                           prepared catalogue CSV
-│   ├── artifacts/                      generated models (git-ignored)
+│   │   └── main.py
+│   │
+│   ├── data/
+│   │   └── AcmeRetail_Products_Prepared.csv
+│   │
+│   ├── artifacts/
+│   │
+│   ├── scripts/
+│   │   └── build_artifacts.py
+│   │
 │   └── requirements.txt
-└── frontend/
-    └── src/
-        ├── App.jsx                     layout + query state
-        ├── lib/{api,constants}.js      one API client, one colour system
-        ├── hooks/{useAsync,useDebounce}.js
-        └── components/
-            ├── Header · QueryPanel · ProductPicker
-            ├── QuerySummary · ModelColumn · ProductCard · ScoreChart
-            └── ExplainView · EvaluationView · ModelsView · EmptyState
+│
+├── frontend/
+│   │
+│   ├── src/
+│   ├── package.json
+│   └── ...
+│
+├── notebooks/
+│   ├── data_preparation.ipynb
+│   ├── tfidf_representation.ipynb
+│   ├── word2vec_representation.ipynb
+│   ├── fasttext_representation.ipynb
+│   └── cosine_similarity_testing.ipynb
+│
+├── README.md
+└── .gitignore
 ```
 
-### Adding a fourth representation
+---
 
-Subclass `BaseRepresentation` (or `DenseEmbeddingRepresentation`), implement
-`load`, `score_by_index`, `score_by_text` and `explain`, and add it to the
-`candidates` list in `RecommendationEngine.load`. Nothing in the similarity engine,
-the API layer or the UI needs to change — the frontend renders whatever
-`/api/models` reports.
+# 🛠️ Technology Stack
+
+| Technology | Purpose |
+|---|---|
+| Python | Machine learning and NLP pipeline |
+| Pandas | Data processing |
+| NumPy | Numerical computation |
+| Scikit-learn | TF-IDF and cosine similarity |
+| Gensim | Word2Vec and FastText |
+| SciPy | Sparse matrix operations |
+| Joblib | Model serialisation |
+| FastAPI | Backend REST API |
+| Uvicorn | ASGI application server |
+| React | Frontend application |
+| Vite | Frontend development tooling |
+| Node.js / npm | Frontend dependency management |
+| Git / GitHub | Version control |
 
 ---
 
-## 6. Engineering notes
+# 💾 Model Artefacts
 
-* **Graceful degradation.** A missing or corrupt artifact disables only that
-  representation; `/api/health` and `/api/models` report exactly what failed and the
-  UI greys out that model instead of erroring.
-* **Vector/catalogue consistency.** At start-up every representation's row count is
-  checked against the catalogue; a mismatch marks the model unavailable rather than
-  silently returning wrong products.
-* **Ranking cost.** `np.argpartition` selects the top-N in O(n) instead of sorting
-  51k scores per request.
-* **FastText model size.** The hash-bucket count is set to 200,000 (gensim's default
-  is 2,000,000). At this vocabulary size that costs nothing measurable in quality and
-  saves roughly 700 MB per saved model.
-* **Known limitation.** One catalogue row has empty text and therefore a zero vector;
-  it can never be recommended. Cosine is undefined at zero magnitude, so the engine
-  returns all-zero scores rather than `NaN`.
-* **Scaling beyond this catalogue.** Exact cosine over 51k rows is 2–10 ms. Past a
-  few million products the right move is an ANN index (FAISS / HNSW) behind the same
-  `score_by_*` interface — no other layer changes.
+The system generates reusable model artefacts during the build process.
+
+### TF-IDF
+
+```text
+tfidf_vectorizer.joblib
+tfidf_matrix.npz
+product_metadata.csv
+```
+
+### Word2Vec
+
+```text
+acme_word2vec.model
+product_word2vec_vectors.npy
+product_metadata_word2vec.csv
+```
+
+### FastText
+
+```text
+acme_fasttext.model
+product_fasttext_vectors.npy
+product_metadata_fasttext.csv
+```
+
+### Similarity Results
+
+```text
+cosine_results_tfidf.csv
+cosine_results_word2vec.csv
+cosine_results_fasttext.csv
+```
 
 ---
 
-## 7. Credits
+# ⚖️ Representation Comparison
 
-Public libraries used: scikit-learn (TF-IDF), gensim (Word2Vec, FastText),
-NumPy/SciPy (vector maths), FastAPI + Uvicorn, React, Vite, Tailwind CSS, Recharts,
-lucide-react. No pre-trained external embeddings — both dense models are trained
-from scratch on this catalogue.
+| Representation | Type | Semantic Information | Subword Information | Primary Role |
+|---|---|---:|---:|---|
+| TF-IDF | Sparse | Limited | No | Lexical baseline |
+| Word2Vec | Dense | Yes | Limited | Word-level semantics |
+| FastText | Dense | Yes | Yes | Semantic + subword representation |
+
+The comparison demonstrates the trade-offs between traditional lexical representations and dense embedding-based approaches.
+
+---
+
+# 🚀 Future Improvements
+
+Potential improvements towards a production-ready recommendation system include:
+
+- Transformer-based sentence embeddings
+- More advanced product-level embedding strategies
+- TF-IDF-weighted embedding aggregation
+- Approximate nearest-neighbour search
+- Vector database integration
+- Category-aware recommendation filtering
+- Improved offline evaluation metrics
+- Recommendation API optimisation
+- Caching of frequently requested recommendations
+- Recommendation latency benchmarking
+- Automated relevance evaluation
+- User-facing recommendation analytics
+
+---
+
+# 🔐 Data & Repository Considerations
+
+Large datasets and generated model artefacts may be excluded from version control using `.gitignore`.
+
+Typical exclusions include:
+
+```text
+*.model
+*.joblib
+*.npy
+*.npz
+```
+
+This keeps the Git repository lightweight while allowing the complete processing and model-building pipeline to remain reproducible.
+
+---
+
+# 🎓 Project Context
+
+This project was developed as a practical NLP and information-retrieval system for product similarity and recommendation.
+
+The implementation demonstrates an end-to-end machine learning workflow:
+
+```text
+Data
+ ↓
+Preprocessing
+ ↓
+Text Representation
+ ↓
+Embedding Generation
+ ↓
+Similarity Calculation
+ ↓
+Ranking
+ ↓
+Recommendation
+ ↓
+Evaluation
+ ↓
+API
+ ↓
+Frontend
+```
+
+The project specifically investigates the difference between **lexical similarity** and **semantic similarity** through TF-IDF, Word2Vec, and FastText representations.
+
+---
+
+# 👨‍💻 Author
+
+**Rahesh Saravanan**
+
+AI & Full-Stack Engineer | Machine Learning & NLP
+
+GitHub:  
+https://github.com/raheshcse
+
+---
+
+## 📄 Licence
+
+This project is intended for educational, technical assessment, and demonstration purposes.
