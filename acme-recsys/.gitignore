@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+
+# Model artifacts (regenerate with: python scripts/build_artifacts.py)
+backend/artifacts/*
+!backend/artifacts/.gitkeep
+
+# Large datasets
+backend/data/*.csv
+
+# Node
+node_modules/
+frontend/dist/
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
