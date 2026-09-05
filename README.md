@@ -38,9 +38,30 @@ The system focuses on understanding relationships between products rather than r
 
 # ⚡ Quick Start
 
-## 1. Backend
+## 1. Clone the Repository
 
-Navigate to the backend directory:
+```bash
+git clone https://github.com/raheshcse/Product-Recommendation-Similarity-System.git
+cd Product-Recommendation-Similarity-System
+```
+
+The main application is contained inside:
+
+```text
+acme-recsys/
+```
+
+Navigate into the application directory:
+
+```bash
+cd acme-recsys
+```
+
+---
+
+# 🐍 2. Backend Setup
+
+Navigate to the backend:
 
 ```bash
 cd backend
@@ -66,25 +87,51 @@ Activate the environment.
 source .venv/bin/activate
 ```
 
-Install the required Python dependencies:
+Install the required dependencies:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-The prepared dataset should be available at:
+---
+
+## 📊 Dataset
+
+The original Acme Retail catalogue contains approximately **70,000 products**.
+
+The dataset is intentionally excluded from the Git repository because of its size and repository management considerations.
+
+The prepared dataset should be placed locally at:
 
 ```text
-backend/data/AcmeRetail_Products_Prepared.csv
+acme-recsys/backend/data/AcmeRetail_Products_Prepared.csv
 ```
 
-Build the model artefacts:
+The prepared dataset contains the three fields used by the similarity system:
+
+```text
+Name
+Main Category
+Subcategory
+```
+
+---
+
+# 🧠 3. Build Model Artefacts
+
+From:
+
+```text
+acme-recsys/backend/
+```
+
+run:
 
 ```bash
 python scripts/build_artifacts.py
 ```
 
-This step trains and generates the three text representations:
+This builds the three text representations:
 
 ```text
 TF-IDF
@@ -92,47 +139,71 @@ Word2Vec
 FastText
 ```
 
-The generated model artefacts are stored in:
+Generated artefacts are stored in:
 
 ```text
-backend/artifacts/
+acme-recsys/backend/artifacts/
 ```
 
-The full build takes approximately **2 minutes** and produces approximately **150 MB** of artefacts.
+The artefacts are generated locally and are excluded from version control.
 
-For a faster smoke test, use:
+The full build takes approximately **2 minutes** and produces approximately **150 MB** of model artefacts.
+
+### Smoke Test
+
+For a faster test using a limited number of products:
 
 ```bash
 python scripts/build_artifacts.py --limit 5000
 ```
 
-Start the FastAPI backend:
+---
+
+# 🚀 4. Start the Backend
+
+From:
+
+```text
+acme-recsys/backend/
+```
+
+run:
 
 ```bash
 uvicorn app.main:app --reload --port 8000
 ```
 
-### Backend endpoints
+The backend will be available at:
 
-**API documentation**
+```text
+http://127.0.0.1:8000
+```
 
+### API Documentation
+
+```text
 http://127.0.0.1:8000/docs
+```
 
-**Health check**
+### Health Check
 
+```text
 http://127.0.0.1:8000/api/health
+```
 
 ---
 
-## 2. Frontend
+# ⚛️ 5. Frontend Setup
 
-Open a new terminal and navigate to the frontend:
+Open a new terminal.
+
+Navigate to the frontend:
 
 ```bash
-cd frontend
+cd Product-Recommendation-Similarity-System/acme-recsys/frontend
 ```
 
-Install the Node.js dependencies:
+Install the frontend dependencies:
 
 ```bash
 npm install
@@ -152,38 +223,38 @@ http://localhost:5173
 
 ---
 
-## 🔄 Running the Complete Application
+# 🔄 Running the Complete Application
 
-Once both services are running:
+Once both the backend and frontend are running:
 
 ```text
-                 PRODUCT RECOMMENDATION SYSTEM
-                              │
-                ┌─────────────┴─────────────┐
-                │                           │
-                ▼                           ▼
-          React Frontend              FastAPI Backend
-          localhost:5173              localhost:8000
-                │                           │
-                └─────────────┬─────────────┘
-                              │
-                              ▼
-                    Recommendation Engine
-                              │
-                ┌─────────────┼─────────────┐
-                │             │             │
-                ▼             ▼             ▼
-              TF-IDF       Word2Vec      FastText
-                │             │             │
-                └─────────────┼─────────────┘
-                              ▼
-                     Cosine Similarity
-                              │
-                              ▼
-                       Ranked Top-N
-                              │
-                              ▼
-                     Similar Products
+             PRODUCT RECOMMENDATION SYSTEM
+                         │
+             ┌───────────┴───────────┐
+             │                       │
+             ▼                       ▼
+      React Frontend           FastAPI Backend
+      localhost:5173           localhost:8000
+             │                       │
+             └───────────┬───────────┘
+                         │
+                         ▼
+                Recommendation Engine
+                         │
+              ┌──────────┼──────────┐
+              │          │          │
+              ▼          ▼          ▼
+           TF-IDF     Word2Vec   FastText
+              │          │          │
+              └──────────┼──────────┘
+                         ▼
+                  Cosine Similarity
+                         │
+                         ▼
+                    Ranked Top-N
+                         │
+                         ▼
+                  Similar Products
 ```
 
 ---
@@ -219,7 +290,7 @@ Product Text Construction
                  Ranking Engine
                        │
                        ▼
-                Top-N Products
+                  Top-N Products
                        │
                        ▼
                    REST API
@@ -232,9 +303,9 @@ Product Text Construction
 
 # 📊 Dataset
 
-The project uses a catalogue containing approximately **70,000 products**.
+The project uses an Acme Retail product catalogue containing approximately **70,000 products**.
 
-The original dataset contains multiple product attributes. For the similarity system, the following three text attributes are used:
+The original dataset contains multiple product attributes. For the similarity system, only the following three text attributes are used:
 
 | Field | Description |
 |---|---|
@@ -244,7 +315,7 @@ The original dataset contains multiple product attributes. For the similarity sy
 
 These fields are combined to create the textual representation used by the NLP models.
 
-Example:
+### Example
 
 ```text
 Name:
@@ -326,7 +397,7 @@ TF-IDF primarily measures term importance and does not inherently capture semant
 
 Word2Vec is used to learn dense word representations from the context in which words occur throughout the product catalogue.
 
-The implementation uses the Skip-Gram architecture.
+The implementation uses the **Skip-Gram architecture**.
 
 Configuration includes:
 
@@ -340,7 +411,7 @@ Epochs: 10
 
 Word-level embeddings are aggregated to create a fixed-size **product-level vector**.
 
-Pipeline:
+### Pipeline
 
 ```text
 Product Text
@@ -386,6 +457,8 @@ Epochs: 10
 
 Product-level vectors are created by aggregating the FastText vectors of the words within each product.
 
+FastText's subword representation also allows it to generate useful vectors for words that were not directly observed during training when their character patterns overlap with known vocabulary.
+
 ---
 
 # 📐 Cosine Similarity
@@ -402,55 +475,32 @@ The recommendation process is:
 6. Sort products by similarity
 7. Return the Top-N most similar products
 
-Example:
+Conceptually:
 
 ```text
-Rank    Product                         Score
---------------------------------------------------
-1       Bluetooth Wireless Headphones     0.91
-2       Wireless Gaming Headset            0.87
-3       Bluetooth Headset                  0.84
-4       Noise Cancelling Headphones        0.81
-5       Audio Headphones                   0.78
+Query Product
+      │
+      ▼
+Query Vector
+      │
+      ▼
+Compare Against Catalogue Vectors
+      │
+      ▼
+Cosine Similarity Scores
+      │
+      ▼
+Sort Descending
+      │
+      ▼
+Top-N Similar Products
 ```
 
 ---
 
 # 🧪 Model Testing & Evaluation
 
-The similarity pipeline evaluates all three representations:
-
-```text
-TF-IDF
-   │
-   ▼
-Cosine Similarity
-   │
-   ▼
-Ranked Products
-```
-
-```text
-Word2Vec
-   │
-   ▼
-Cosine Similarity
-   │
-   ▼
-Ranked Products
-```
-
-```text
-FastText
-   │
-   ▼
-Cosine Similarity
-   │
-   ▼
-Ranked Products
-```
-
-The models are compared based on the relevance and quality of their Top-N product rankings.
+The similarity pipeline evaluates all three representations.
 
 Evaluation considerations include:
 
@@ -469,36 +519,43 @@ Evaluation considerations include:
 ```text
 Product-Recommendation-Similarity-System/
 │
-├── backend/
-│   │
-│   ├── app/
-│   │   └── main.py
-│   │
-│   ├── data/
-│   │   └── AcmeRetail_Products_Prepared.csv
-│   │
-│   ├── artifacts/
-│   │
-│   ├── scripts/
-│   │   └── build_artifacts.py
-│   │
-│   └── requirements.txt
-│
-├── frontend/
-│   │
-│   ├── src/
-│   ├── package.json
-│   └── ...
-│
-├── notebooks/
-│   ├── data_preparation.ipynb
-│   ├── tfidf_representation.ipynb
-│   ├── word2vec_representation.ipynb
-│   ├── fasttext_representation.ipynb
-│   └── cosine_similarity_testing.ipynb
-│
 ├── README.md
-└── .gitignore
+├── .gitignore
+│
+└── acme-recsys/
+    │
+    ├── backend/
+    │   ├── app/
+    │   ├── data/
+    │   ├── artifacts/
+    │   ├── scripts/
+    │   │   └── build_artifacts.py
+    │   ├── .env.example
+    │   └── requirements.txt
+    │
+    ├── frontend/
+    │   ├── src/
+    │   ├── package.json
+    │   └── ...
+    │
+    ├── run_dev.bat
+    ├── run_dev.sh
+    └── .gitignore
+```
+
+### Local-only files
+
+The following files are intentionally excluded from Git:
+
+```text
+AcmeRetail_Products_70000.csv
+AcmeRetail_Products_Prepared.csv
+*.model
+*.joblib
+*.npy
+*.npz
+*.zip
+backend/artifacts/*
 ```
 
 ---
@@ -526,6 +583,12 @@ Product-Recommendation-Similarity-System/
 # 💾 Model Artefacts
 
 The system generates reusable model artefacts during the build process.
+
+These artefacts are **not committed to the Git repository** because they can be regenerated using:
+
+```bash
+python scripts/build_artifacts.py
+```
 
 ### TF-IDF
 
@@ -573,6 +636,27 @@ The comparison demonstrates the trade-offs between traditional lexical represent
 
 ---
 
+# 🔐 Data & Repository Considerations
+
+The original product dataset and generated model artefacts are excluded from version control.
+
+This keeps the Git repository lightweight while allowing the complete processing and model-building pipeline to remain reproducible.
+
+The repository contains:
+
+- Application source code
+- NLP processing logic
+- Recommendation logic
+- API implementation
+- Frontend implementation
+- Model-building scripts
+- Configuration examples
+- Documentation
+
+Large datasets and generated model files are maintained locally rather than committed to Git.
+
+---
+
 # 🚀 Future Improvements
 
 Potential improvements towards a production-ready recommendation system include:
@@ -592,23 +676,6 @@ Potential improvements towards a production-ready recommendation system include:
 
 ---
 
-# 🔐 Data & Repository Considerations
-
-Large datasets and generated model artefacts may be excluded from version control using `.gitignore`.
-
-Typical exclusions include:
-
-```text
-*.model
-*.joblib
-*.npy
-*.npz
-```
-
-This keeps the Git repository lightweight while allowing the complete processing and model-building pipeline to remain reproducible.
-
----
-
 # 🎓 Project Context
 
 This project was developed as a practical NLP and information-retrieval system for product similarity and recommendation.
@@ -617,27 +684,40 @@ The implementation demonstrates an end-to-end machine learning workflow:
 
 ```text
 Data
- ↓
+  ↓
 Preprocessing
- ↓
+  ↓
 Text Representation
- ↓
+  ↓
 Embedding Generation
- ↓
+  ↓
 Similarity Calculation
- ↓
+  ↓
 Ranking
- ↓
+  ↓
 Recommendation
- ↓
+  ↓
 Evaluation
- ↓
+  ↓
 API
- ↓
+  ↓
 Frontend
 ```
 
 The project specifically investigates the difference between **lexical similarity** and **semantic similarity** through TF-IDF, Word2Vec, and FastText representations.
+
+---
+
+# 🎥 Demonstration
+
+The system can be demonstrated through the web interface by:
+
+1. Selecting or entering a product
+2. Generating vector representations
+3. Calculating similarity against the product catalogue
+4. Comparing TF-IDF, Word2Vec, and FastText results
+5. Displaying ranked Top-N recommendations
+6. Inspecting similarity scores and evaluation results
 
 ---
 
@@ -647,7 +727,8 @@ The project specifically investigates the difference between **lexical similarit
 
 AI & Full-Stack Engineer | Machine Learning & NLP
 
-GitHub:  
+GitHub:
+
 https://github.com/raheshcse
 
 ---
