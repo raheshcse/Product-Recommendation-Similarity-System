@@ -519,29 +519,31 @@ Evaluation considerations include:
 ```text
 Product-Recommendation-Similarity-System/
 │
-├── README.md
-├── .gitignore
+├── backend/
+│   │
+│   ├── app/
+│   ├── artifacts/
+│   ├── data/
+│   ├── scripts/
+│   │   └── build_artifacts.py
+│   │
+│   ├── .env.example
+│   └── requirements.txt
 │
-└── acme-recsys/
-    │
-    ├── backend/
-    │   ├── app/
-    │   ├── data/
-    │   ├── artifacts/
-    │   ├── scripts/
-    │   │   └── build_artifacts.py
-    │   ├── .env.example
-    │   └── requirements.txt
-    │
-    ├── frontend/
-    │   ├── src/
-    │   ├── package.json
-    │   └── ...
-    │
-    ├── run_dev.bat
-    ├── run_dev.sh
-    └── .gitignore
-```
+├── frontend/
+│   └── ...
+│
+├── notebooks/
+│   ├── data_preparation.ipynb
+│   ├── tfidf_representation.ipynb
+│   ├── word2vec_representation.ipynb
+│   ├── fasttext_representation.ipynb
+│   └── cosine_similarity_testing.ipynb
+│
+├── run_dev.bat
+├── run_dev.sh
+├── .gitignore
+└── README.md
 
 ### Local-only files
 
