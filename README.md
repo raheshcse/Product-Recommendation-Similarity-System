@@ -545,20 +545,6 @@ Product-Recommendation-Similarity-System/
 ├── .gitignore
 └── README.md
 
-### Local-only files
-
-The following files are intentionally excluded from Git:
-
-```text
-AcmeRetail_Products_70000.csv
-AcmeRetail_Products_Prepared.csv
-*.model
-*.joblib
-*.npy
-*.npz
-*.zip
-backend/artifacts/*
-```
 
 ---
 
